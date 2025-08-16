@@ -23,7 +23,7 @@ pub extern "C" fn _start() -> ! {
     loop {}
 }
 
-// we could either the fine the code below as our test runner or disable the harness attr in cargo.toml
+// we could either define the code below as our test runner or disable the harness attr in cargo.toml
 // so that test runners wouldnt be necessary and each test would behave like a normal executable/method
 //
 // fn test_runner(tests: &[&dyn Fn()]) {
