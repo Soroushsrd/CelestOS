@@ -24,7 +24,7 @@ bootloader = "0.9"
 volatile = "0.2.6"
 spin = "0.10.0"
 lazy_static = { version = "1.5.0", features = ["spin_no_std"] }
-x86_64 = "0.15.2"
+x86_64 = { version = "0.15.2", features = ["abi_x86_interrupt"] }
 #We will use the uart_16550 crate to initialize the UART and send data over the serial port.
 #using the serial port, we can send data from kernel to our own stdoutput
 uart_16550 = "0.4.0"
@@ -43,4 +43,8 @@ bench = false
 
 [[test]]
 name = "should_panic"
+harness = false
+
+[[test]]
+name = "stack_overflow"
 harness = false
