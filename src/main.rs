@@ -6,6 +6,7 @@
 #![no_std]
 #![no_main]
 #![feature(custom_test_frameworks)]
+#![feature(abi_x86_interrupt)]
 #![test_runner(os::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
@@ -30,6 +31,11 @@ pub extern "C" fn _start() -> ! {
     // start the idt
     os::init();
     // invoke a breakpoint exception
+    // unsafe {
+    //     // triggers a page fault
+    //     *(0xdeadbeef as *mut u8) = 42;
+    // }
+
     x86_64::instructions::interrupts::int3();
 
     // We set the name of the test framework entry function to test_main and call

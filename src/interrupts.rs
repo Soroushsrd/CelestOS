@@ -112,17 +112,37 @@
 // | stack frame of  |
 // | the handler func|
 // ------------------
+//
+// Only a specific combination of exceptions can result in double fault:
+//
+// First Exception	        Second Exception
+//
+// Divide-by-zero, -then->         Invalid TSS, Segment Not Present, Stack-Segment Fault, General Protection Fault
+// Invalid TSS,
+// Segment Not Present,
+// Stack-Segment Fault,
+// General Protection Fault
+//
+// Page Fault	                   Page Fault, Invalid TSS, Segment Not Present, Stack-Segment Fault, General Protection Fault
 
 use lazy_static::lazy_static;
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 
-use crate::println;
+use crate::{gdt, println};
 // idt must live staticly but should also be mutable. so we use lazy static
 // to initialize it at runtime
 lazy_static! {
     static ref IDT: InterruptDescriptorTable = {
         let mut idt = InterruptDescriptorTable::new();
         idt.breakpoint.set_handler_fn(breakpoint_handler);
+        unsafe {
+            idt.double_fault
+                .set_handler_fn(double_fault_handler)
+                // Assigns a Interrupt Stack Table (IST) stack to this handler.
+                // The CPU will then always switch to the specified
+                // stack before the handler is invoked.
+                .set_stack_index(gdt::DOUBLE_FAULT_IST_INDEX);
+        }
         idt
     };
 }
@@ -138,6 +158,15 @@ pub fn init_idt() {
 /// prints exception:breakpoint when a breakpoint exception is invoked!
 extern "x86-interrupt" fn breakpoint_handler(stack_frame: InterruptStackFrame) {
     println!("EXCEPTION: BREAKPOINT\n{:#?}", stack_frame);
+}
+
+/// double fault handler. without a double fault, a triple fault will be called which will cause
+/// a continuous reboot! we need to avoid double and triple faults at all cost
+extern "x86-interrupt" fn double_fault_handler(
+    stack_frame: InterruptStackFrame,
+    _error_code: u64,
+) -> ! {
+    panic!("EXCEPTION: DOUBLE FAULT\n{:#?}", stack_frame);
 }
 
 #[test_case]
