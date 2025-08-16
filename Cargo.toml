@@ -1,0 +1,46 @@
+[package]
+name = "os"
+version = "0.1.0"
+edition = "2024"
+
+[package.metadata.bootimage]
+test-args = [
+    "-device",
+    "isa-debug-exit,iobase=0xf4,iosize=0x04",
+    "-serial",
+    "stdio",
+    "-display",
+    "none",
+]
+# if this isnt set, cargo will assume failure even when success is returned
+# because cargo consideres anything other than 0 as failure
+test-success-exit-code = 33 # (0x10 <<1) | 1
+# if tests take more than 5 minutes, we are gonna abort it and
+# print timeout error
+test-timeout = 300
+
+[dependencies]
+bootloader = "0.9"
+volatile = "0.2.6"
+spin = "0.10.0"
+lazy_static = { version = "1.5.0", features = ["spin_no_std"] }
+x86_64 = "0.15.2"
+#We will use the uart_16550 crate to initialize the UART and send data over the serial port.
+#using the serial port, we can send data from kernel to our own stdoutput
+uart_16550 = "0.4.0"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+
+#to stop the cargo from building for all targets:
+[[bin]]
+name = "os"
+test = true
+bench = false
+
+[[test]]
+name = "should_panic"
+harness = false
